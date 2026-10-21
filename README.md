@@ -34,9 +34,13 @@ curl.exe http://localhost:8080/saludo
 Para arrancar con el perfil de producción:
 
 ```powershell
-.\mvnw.cmd quarkus:dev -Dquarkus.profile=prod
+cmd.exe /d /c ".\mvnw.cmd -Dquarkus.profile=prod quarkus:dev"
 ```
 
+En este entorno, invocar directamente el `.cmd` desde PowerShell separa
+incorrectamente el argumento con punto y Maven interpreta `.profile=prod`
+como una fase. `cmd.exe /c` lo reenvía como un solo argumento; además,
+colocar la propiedad antes del objetivo de Maven evita ambigüedades.
 Observa cómo cambian `app.nombre` y `app.modo`. Ejecuta las pruebas:
 
 ```powershell
