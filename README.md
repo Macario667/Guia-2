@@ -1,66 +1,53 @@
 # quarkus-config-demo
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Ejemplo de configuración tipada de una aplicación Quarkus, con propiedades jerárquicas, valores predeterminados y valores distintos por perfil.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## Guías adaptadas
 
-## Running the application in dev mode
+- [Configuring Your Application](https://quarkus.io/guides/config): define y consume `app.*` en los recursos.
+- [Configuration Reference Guide](https://quarkus.io/guides/config-reference): sirve para entender la precedencia de fuentes y perfiles que intervienen al resolver esas propiedades.
 
-You can run your application in dev mode that enables live coding using:
+La configuración tipada usa SmallRye Config. No es una implementación de configuración basada en variables Java ad hoc: `AppConfig` define el contrato y Quarkus lo inyecta.
 
-```shell script
-./mvnw compile quarkus:dev
+## Cómo se aplica
+
+- `AppConfig` tiene el prefijo `app`, valores predeterminados para `version` y `modo`, una sección anidada `autor` y el enum `Modo`.
+- `application.properties` define `app.nombre`, `app.autor.*` y `app.bienvenida`. La bienvenida combina propiedades con `${...}`.
+- `application-dev.properties` y `application-prod.properties` reemplazan el nombre y el modo para los perfiles `dev` y `prod`.
+- `InfoResource` expone parte de la configuración como JSON en `GET /info`.
+- `SaludoResource` expone la bienvenida y el modo en `GET /saludo`.
+- `ConfigTest` usa un perfil de prueba y sobreescribe propiedades para comprobar la inyección.
+
+## Ejecutar y probar
+
+```powershell
+.\mvnw.cmd quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Prueba los dos recursos:
 
-## Packaging and running the application
-
-The application can be packaged using:
-
-```shell script
-./mvnw package
+```powershell
+curl.exe http://localhost:8080/info
+curl.exe http://localhost:8080/saludo
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+Para arrancar con el perfil de producción:
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```powershell
+.\mvnw.cmd quarkus:dev -Dquarkus.profile=prod
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+Observa cómo cambian `app.nombre` y `app.modo`. Ejecuta las pruebas:
 
-## Creating a native executable
-
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
+```powershell
+.\mvnw.cmd test
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+## Ejercicio para explicar perfiles y precedencia
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
+1. Cambia `app.nombre` en `application.properties` y observa `/info`.
+2. Añade la misma propiedad a `application-dev.properties`; compara el perfil `dev` con el perfil predeterminado.
+3. Pasa una propiedad por línea de comandos, por ejemplo `-Dapp.nombre=Temporal`, y comprueba cuál valor prevalece.
+4. Explica por qué `@WithDefault` solo proporciona un valor si no hay otra fuente configurada.
 
-You can then execute your native executable with: `./target/quarkus-config-demo-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
-
-## Related Guides
-
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-
-## Provided Code
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+Usa valores de demostración; evita poner credenciales o secretos en propiedades del repositorio.
